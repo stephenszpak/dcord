@@ -29,7 +29,7 @@ function MessageInput({ onSend, user }) {
         value={content}
         onChange={(e) => setContent(e.target.value)}
       />
-      <button type="submit">Send</button>
+      <button type="submit" className="send-button">&#8593;</button>
     </form>
   );
 }
@@ -37,10 +37,10 @@ function MessageInput({ onSend, user }) {
 function ChatroomList({ rooms, selectedId, onSelect, onCreate }) {
   return (
     <div className="chatrooms">
-      <div className="chatrooms-header">Chatrooms</div>
-      <button className="create-chatroom-btn" onClick={onCreate}>
-        Create Chatroom
-      </button>
+      <div className="chatrooms-header">
+        <span>Chatrooms</span>
+        <button className="create-chatroom-icon" onClick={onCreate}>+</button>
+      </div>
       {rooms.map((r) => (
         <div
           key={r.id}
