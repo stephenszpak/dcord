@@ -25,3 +25,19 @@ body {
 .message-input input {
   margin-right: 5px;
 }
+
+.login-form,
+.register-form {
+  width: 300px;
+  margin: 100px auto;
+  background: #2f3136;
+  padding: 20px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form input,
+.register-form input {
+  margin-bottom: 10px;
+}
