@@ -18,11 +18,17 @@ body {
 .chatrooms {
   width: 150px;
   margin-right: 10px;
+  border: 1px solid #202225;
+  border-radius: 5px;
+  padding: 10px;
 }
 
 .members {
   width: 150px;
   margin-left: 10px;
+  border: 1px solid #202225;
+  border-radius: 5px;
+  padding: 10px;
 }
 
 .member {
@@ -40,6 +46,9 @@ body {
 
 .chat-window {
   flex: 1;
+  border: 1px solid #202225;
+  border-radius: 5px;
+  padding: 10px;
 }
 
 .messages {
@@ -48,10 +57,36 @@ body {
   border: 1px solid #202225;
   padding: 5px;
   margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.message-input {
+  position: relative;
 }
 
 .message-input input {
-  margin-right: 5px;
+  width: 100%;
+  padding: 8px 35px 8px 10px;
+  border-radius: 20px;
+  border: 1px solid #202225;
+  box-sizing: border-box;
+}
+
+.send-button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: #5865f2;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login-form,
@@ -70,9 +105,25 @@ body {
   margin-bottom: 10px;
 }
 
-.create-chatroom-btn {
-  width: 100%;
-  margin: 5px 0 10px 0;
+
+.chatrooms-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.create-chatroom-icon {
+  background: #5865f2;
+  border: none;
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dialog-backdrop {
