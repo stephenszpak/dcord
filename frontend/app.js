@@ -37,10 +37,10 @@ function MessageInput({ onSend, user }) {
 function ChatroomList({ rooms, selectedId, onSelect, onCreate }) {
   return (
     <div className="chatrooms">
-      <div className="chatrooms-header">
-        <span>Chatrooms</span>
-        <button onClick={onCreate}>+</button>
-      </div>
+      <div className="chatrooms-header">Chatrooms</div>
+      <button className="create-chatroom-btn" onClick={onCreate}>
+        Create Chatroom
+      </button>
       {rooms.map((r) => (
         <div
           key={r.id}
@@ -58,6 +58,8 @@ function ChatApp({ user }) {
   const [rooms, setRooms] = useState([]);
   const [current, setCurrent] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
 
   const loadRooms = () => {
     fetch('/chatrooms?user=' + encodeURIComponent(user))
@@ -91,19 +93,42 @@ function ChatApp({ user }) {
   };
 
   const createRoom = () => {
-    const name = prompt('Chatroom name');
-    if (!name) return;
+    setShowCreate(true);
+  };
+
+  const submitCreateRoom = () => {
+    if (!newRoomName) return;
     fetch('/chatrooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, user }),
+      body: JSON.stringify({ name: newRoomName, user }),
     })
       .then((r) => r.json())
-      .then(() => loadRooms());
+      .then(() => {
+        setShowCreate(false);
+        setNewRoomName('');
+        loadRooms();
+      });
   };
 
   return (
     <div className="chat-app">
+      {showCreate && (
+        <div className="dialog-backdrop">
+          <div className="dialog">
+            <h2>Create Chatroom</h2>
+            <input
+              placeholder="Chatroom Name"
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+            />
+            <div>
+              <button onClick={submitCreateRoom}>Create</button>
+              <button onClick={() => setShowCreate(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
       <ChatroomList
         rooms={rooms}
         selectedId={current ? current.id : null}
