@@ -34,32 +34,87 @@ function MessageInput({ onSend, user }) {
   );
 }
 
+function ChatroomList({ rooms, selectedId, onSelect, onCreate }) {
+  return (
+    <div className="chatrooms">
+      <div className="chatrooms-header">
+        <span>Chatrooms</span>
+        <button onClick={onCreate}>+</button>
+      </div>
+      {rooms.map((r) => (
+        <div
+          key={r.id}
+          className={r.id === selectedId ? 'chatroom selected' : 'chatroom'}
+          onClick={() => onSelect(r)}
+        >
+          {r.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ChatApp({ user }) {
+  const [rooms, setRooms] = useState([]);
+  const [current, setCurrent] = useState(null);
   const [messages, setMessages] = useState([]);
 
+  const loadRooms = () => {
+    fetch('/chatrooms?user=' + encodeURIComponent(user))
+      .then((r) => r.json())
+      .then((data) => {
+        setRooms(data);
+        if (!current && data.length > 0) setCurrent(data[0]);
+      });
+  };
+
+  useEffect(loadRooms, []);
+
   const loadMessages = () => {
-    fetch('/messages')
+    if (!current) return;
+    fetch('/messages?chatroom_id=' + current.id)
       .then((r) => r.json())
       .then((data) => setMessages(data));
   };
 
-  useEffect(loadMessages, []);
+  useEffect(loadMessages, [current]);
 
   const sendMessage = (msg) => {
+    if (!current) return;
     fetch('/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(msg),
+      body: JSON.stringify({ ...msg, chatroom_id: current.id }),
     }).then(loadMessages);
+  };
+
+  const createRoom = () => {
+    const name = prompt('Chatroom name');
+    if (!name) return;
+    fetch('/chatrooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, user }),
+    })
+      .then((r) => r.json())
+      .then(() => loadRooms());
   };
 
   return (
     <div className="chat-app">
-      <h1>Dcord</h1>
-      <MessageList messages={messages} />
-      <MessageInput onSend={sendMessage} user={user} />
+      <ChatroomList
+        rooms={rooms}
+        selectedId={current ? current.id : null}
+        onSelect={setCurrent}
+        onCreate={createRoom}
+      />
+      <div className="chat-window">
+        <h1>{current ? current.name : 'Select a chatroom'}</h1>
+        {current && <MessageList messages={messages} />}
+        {current && <MessageInput onSend={sendMessage} user={user} />}
+      </div>
     </div>
   );
 }
