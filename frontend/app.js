@@ -54,10 +54,24 @@ function ChatroomList({ rooms, selectedId, onSelect, onCreate }) {
   );
 }
 
+function MemberList({ members }) {
+  return (
+    <div className="members">
+      <div className="chatrooms-header">Members</div>
+      {members.map((m) => (
+        <div key={m.username} className="member" style={{ opacity: m.online ? 1 : 0.5 }}>
+          {m.username}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ChatApp({ user }) {
   const [rooms, setRooms] = useState([]);
   const [current, setCurrent] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [members, setMembers] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
 
@@ -77,6 +91,9 @@ function ChatApp({ user }) {
     fetch('/messages?chatroom_id=' + current.id)
       .then((r) => r.json())
       .then((data) => setMessages(data));
+    fetch('/members?chatroom_id=' + current.id)
+      .then((r) => r.json())
+      .then((data) => setMembers(data));
   };
 
   useEffect(loadMessages, [current]);
@@ -140,6 +157,7 @@ function ChatApp({ user }) {
         {current && <MessageList messages={messages} />}
         {current && <MessageInput onSend={sendMessage} user={user} />}
       </div>
+      <MemberList members={members} />
     </div>
   );
 }
