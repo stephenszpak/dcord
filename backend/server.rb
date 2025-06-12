@@ -15,6 +15,7 @@ class ChatServer
       seed_test_data(conn)
     end
 
+
     @server = WEBrick::HTTPServer.new(
       Port: port,
       DocumentRoot: root,
@@ -132,6 +133,7 @@ class ChatServer
 
   def seed_test_data(conn)
     count = conn.exec('SELECT COUNT(*) FROM users')[0]['count'].to_i
+
     return unless count.zero?
 
     digest = Digest::SHA256.hexdigest('password')
@@ -139,6 +141,7 @@ class ChatServer
     1.upto(10) do |i|
       online = i <= 3
       result = conn.exec_params(
+
         'INSERT INTO users(username, password_digest, online) VALUES($1,$2,$3) RETURNING id',
         ["user#{i}", digest, online]
       )
@@ -304,6 +307,7 @@ class ChatServer
         )
         res.body = result.map { |r| { username: r['username'], online: r['online'] == 't' } }.to_json
       end
+
     else
       res.body = [].to_json
     end
