@@ -10,6 +10,7 @@ class ChatServer
     create_chatrooms_table
     create_memberships_table
     create_messages_table
+    seed_test_data
 
     @server = WEBrick::HTTPServer.new(
       Port: port,
@@ -20,9 +21,11 @@ class ChatServer
     @server.mount_proc('/messages') { |req, res| handle_messages(req, res) }
     @server.mount_proc('/register') { |req, res| handle_register(req, res) }
     @server.mount_proc('/login') { |req, res| handle_login(req, res) }
+    @server.mount_proc('/logout') { |req, res| handle_logout(req, res) }
     @server.mount_proc('/chatrooms') { |req, res| handle_chatrooms(req, res) }
     @server.mount_proc('/add_user') { |req, res| handle_add_user(req, res) }
     @server.mount_proc('/remove_user') { |req, res| handle_remove_user(req, res) }
+    @server.mount_proc('/members') { |req, res| handle_members(req, res) }
   end
 
   def start
@@ -71,9 +74,11 @@ class ChatServer
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        password_digest TEXT NOT NULL
+        password_digest TEXT NOT NULL,
+        online BOOLEAN DEFAULT FALSE
       );
     SQL
+    @conn.exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS online BOOLEAN DEFAULT FALSE')
   end
 
   def create_chatrooms_table
@@ -109,6 +114,33 @@ class ChatServer
     SQL
   end
 
+  def seed_test_data
+    count = @conn.exec('SELECT COUNT(*) FROM users')[0]['count'].to_i
+    return unless count.zero?
+
+    digest = Digest::SHA256.hexdigest('password')
+    user_ids = []
+    1.upto(10) do |i|
+      online = i <= 3
+      result = @conn.exec_params(
+        'INSERT INTO users(username, password_digest, online) VALUES($1,$2,$3) RETURNING id',
+        ["user#{i}", digest, online]
+      )
+      user_ids << result[0]['id']
+    end
+
+    chat = @conn.exec_params('SELECT id FROM chatrooms WHERE name=$1', ['test'])
+    if chat.ntuples.zero?
+      chat_id = @conn.exec_params('INSERT INTO chatrooms(name, admin_id) VALUES($1,$2) RETURNING id', ['test', user_ids.first])[0]['id']
+    else
+      chat_id = chat[0]['id']
+    end
+
+    user_ids.each do |uid|
+      @conn.exec_params('INSERT INTO memberships(user_id, chatroom_id) VALUES($1,$2) ON CONFLICT DO NOTHING', [uid, chat_id])
+    end
+  end
+
   def handle_register(req, res)
     res['Content-Type'] = 'application/json'
     return res.status = 405 unless req.request_method == 'POST'
@@ -134,11 +166,25 @@ class ChatServer
       digest = Digest::SHA256.hexdigest(data['password'].to_s)
       result = @conn.exec_params('SELECT * FROM users WHERE username=$1 AND password_digest=$2', [data['username'], digest])
       if result.ntuples == 1
+        @conn.exec_params('UPDATE users SET online=true WHERE username=$1', [data['username']])
         res.body = { success: true }.to_json
       else
         res.status = 401
         res.body = { error: 'invalid credentials' }.to_json
       end
+    rescue JSON::ParserError
+      res.status = 400
+      res.body = { error: 'invalid JSON' }.to_json
+    end
+  end
+
+  def handle_logout(req, res)
+    res['Content-Type'] = 'application/json'
+    return res.status = 405 unless req.request_method == 'POST'
+    begin
+      data = JSON.parse(req.body)
+      @conn.exec_params('UPDATE users SET online=false WHERE username=$1', [data['username']])
+      res.body = { success: true }.to_json
     rescue JSON::ParserError
       res.status = 400
       res.body = { error: 'invalid JSON' }.to_json
@@ -217,6 +263,21 @@ class ChatServer
     rescue JSON::ParserError
       res.status = 400
       res.body = { error: 'invalid JSON' }.to_json
+    end
+  end
+
+  def handle_members(req, res)
+    res['Content-Type'] = 'application/json'
+    return res.status = 405 unless req.request_method == 'GET'
+    chatroom_id = req.query['chatroom_id']
+    if chatroom_id
+      result = @conn.exec_params(
+        'SELECT u.username, u.online FROM users u JOIN memberships m ON u.id=m.user_id WHERE m.chatroom_id=$1',
+        [chatroom_id]
+      )
+      res.body = result.map { |r| { username: r['username'], online: r['online'] == 't' } }.to_json
+    else
+      res.body = [].to_json
     end
   end
 
