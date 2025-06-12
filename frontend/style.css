@@ -7,11 +7,30 @@ body {
 }
 
 .chat-app {
-  width: 400px;
+  display: flex;
+  width: 600px;
   margin: 20px auto;
   background: #2f3136;
   padding: 10px;
   border-radius: 5px;
+}
+
+.chatrooms {
+  width: 150px;
+  margin-right: 10px;
+}
+
+.chatroom {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.chatroom.selected {
+  background: #5865f2;
+}
+
+.chat-window {
+  flex: 1;
 }
 
 .messages {

@@ -27,12 +27,13 @@ npm install --prefix frontend
 ruby backend/server.rb
 ```
 
-The server runs on [http://localhost:3000](http://localhost:3000) and serves the React app from the `frontend` directory. Messages are stored only in memory and will reset whenever the server restarts.
+The server runs on [http://localhost:3000](http://localhost:3000) and serves the React app from the `frontend` directory. All data including users, chatrooms and messages are stored in PostgreSQL.
 
 ## Features
 
 * Create an account and login
-* View and send messages once authenticated
+* Create chatrooms and invite other users
+* View and send messages in each chatroom once authenticated
 * Minimal setup without Rails
 
 This is a simplified demonstration. A real project would use frameworks like Rails and a persistent database.
