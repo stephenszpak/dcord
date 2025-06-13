@@ -6,6 +6,8 @@ const ChatApp = ({ user }) => {
   const [showCreate, setShowCreate] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
   const [newRoomName, setNewRoomName] = React.useState('');
+  const [dialogDims, setDialogDims] = React.useState({ width: 0, height: 0 });
+  const chatWindowRef = React.useRef(null);
 
   const loadRooms = async () => {
     const data = await fetchChatrooms(user);
@@ -41,11 +43,18 @@ const ChatApp = ({ user }) => {
     loadRooms();
   };
 
+  React.useLayoutEffect(() => {
+    if ((showCreate || showEdit) && chatWindowRef.current) {
+      const rect = chatWindowRef.current.getBoundingClientRect();
+      setDialogDims({ width: rect.width - 15, height: rect.height - 15 });
+    }
+  }, [showCreate, showEdit, current]);
+
   return (
     <div className="chat-app">
       {showCreate && (
         <div className="dialog-backdrop">
-          <div className="dialog">
+          <div className="dialog" style={{ width: dialogDims.width, height: dialogDims.height }}>
             <h2>Create Chatroom</h2>
             <input
               placeholder="Chatroom Name"
@@ -61,7 +70,7 @@ const ChatApp = ({ user }) => {
       )}
       {showEdit && (
         <div className="dialog-backdrop">
-          <div className="dialog">
+          <div className="dialog" style={{ width: dialogDims.width, height: dialogDims.height }}>
             <h2>Edit Profile</h2>
             <div>
               <button onClick={() => setShowEdit(false)}>Close</button>
@@ -78,7 +87,7 @@ const ChatApp = ({ user }) => {
         />
         <UserBanner user={user} onEdit={() => setShowEdit(true)} />
       </div>
-      <div className="chat-window">
+      <div className="chat-window" ref={chatWindowRef}>
         <h1>{current ? current.name : 'Select a chatroom'}</h1>
         {current && <MessageList messages={messages} />}
         {current && <MessageInput onSend={sendMessage} user={user} />}
