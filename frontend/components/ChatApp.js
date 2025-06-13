@@ -4,6 +4,7 @@ const ChatApp = ({ user }) => {
   const [messages, setMessages] = React.useState([]);
   const [members, setMembers] = React.useState([]);
   const [showCreate, setShowCreate] = React.useState(false);
+  const [showEdit, setShowEdit] = React.useState(false);
   const [newRoomName, setNewRoomName] = React.useState('');
 
   const loadRooms = async () => {
@@ -58,12 +59,25 @@ const ChatApp = ({ user }) => {
           </div>
         </div>
       )}
-      <ChatroomList
-        rooms={rooms}
-        selectedId={current ? current.id : null}
-        onSelect={setCurrent}
-        onCreate={createRoom}
-      />
+      {showEdit && (
+        <div className="dialog-backdrop">
+          <div className="dialog">
+            <h2>Edit Profile</h2>
+            <div>
+              <button onClick={() => setShowEdit(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="left-column">
+        <ChatroomList
+          rooms={rooms}
+          selectedId={current ? current.id : null}
+          onSelect={setCurrent}
+          onCreate={createRoom}
+        />
+        <UserBanner user={user} onEdit={() => setShowEdit(true)} />
+      </div>
       <div className="chat-window">
         <h1>{current ? current.name : 'Select a chatroom'}</h1>
         {current && <MessageList messages={messages} />}
