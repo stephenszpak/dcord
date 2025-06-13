@@ -29,7 +29,9 @@ const LoginForm = ({ onLogin, onShowRegister }) => {
       />
       <button type="submit">Login</button>
       <div>
-        <a href="#" onClick={onShowRegister}>Create Account</a>
+        <a href="#" onClick={onShowRegister} className="create-account-button">
+          Create Account
+        </a>
       </div>
     </form>
   );
