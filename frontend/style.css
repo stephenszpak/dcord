@@ -157,6 +157,13 @@ button:not(.send-button):not(.create-chatroom-icon):not(.edit-profile-icon) {
   flex-direction: column;
 }
 
+.dialog-buttons {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .left-column {
   width: 150px;
   margin-right: 10px;

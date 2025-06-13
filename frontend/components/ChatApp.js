@@ -5,6 +5,7 @@ const ChatApp = ({ user }) => {
   const [members, setMembers] = React.useState([]);
   const [showCreate, setShowCreate] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
+  const [avatar, setAvatar] = React.useState(null);
   const [newRoomName, setNewRoomName] = React.useState('');
   const [dialogDims, setDialogDims] = React.useState({ width: 0, height: 0 });
   const chatWindowRef = React.useRef(null);
@@ -16,6 +17,14 @@ const ChatApp = ({ user }) => {
   };
 
   React.useEffect(loadRooms, []);
+
+  React.useEffect(() => {
+    const loadAvatar = async () => {
+      const data = await fetchAvatar(user);
+      setAvatar(data.avatar);
+    };
+    loadAvatar();
+  }, []);
 
   const loadMessages = async () => {
     if (!current) return;
@@ -34,6 +43,17 @@ const ChatApp = ({ user }) => {
   };
 
   const createRoom = () => setShowCreate(true);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatar(reader.result);
+      updateAvatar(user, reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const submitCreateRoom = async () => {
     if (!newRoomName) return;
@@ -72,7 +92,9 @@ const ChatApp = ({ user }) => {
         <div className="dialog-backdrop">
           <div className="dialog" style={{ width: dialogDims.width, height: dialogDims.height }}>
             <h2>Edit Profile</h2>
-            <div>
+            <div className="avatar-placeholder" style={avatar ? { backgroundImage: `url(${avatar})`, backgroundSize: 'cover' } : {}} />
+            <input type="file" accept="image/*" onChange={handleAvatarChange} />
+            <div className="dialog-buttons">
               <button onClick={() => setShowEdit(false)}>Close</button>
             </div>
           </div>
@@ -85,7 +107,7 @@ const ChatApp = ({ user }) => {
           onSelect={setCurrent}
           onCreate={createRoom}
         />
-        <UserBanner user={user} onEdit={() => setShowEdit(true)} />
+        <UserBanner user={user} avatar={avatar} onEdit={() => setShowEdit(true)} />
       </div>
       <div className="chat-window" ref={chatWindowRef}>
         <h1>{current ? current.name : 'Select a chatroom'}</h1>

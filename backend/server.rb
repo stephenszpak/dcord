@@ -30,6 +30,7 @@ class ChatServer
     @server.mount_proc('/add_user') { |req, res| handle_add_user(req, res) }
     @server.mount_proc('/remove_user') { |req, res| handle_remove_user(req, res) }
     @server.mount_proc('/members') { |req, res| handle_members(req, res) }
+    @server.mount_proc('/avatar') { |req, res| handle_avatar(req, res) }
   end
 
   def start
@@ -92,10 +93,12 @@ class ChatServer
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password_digest TEXT NOT NULL,
-        online BOOLEAN DEFAULT FALSE
+        online BOOLEAN DEFAULT FALSE,
+        avatar TEXT
       );
     SQL
     conn.exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS online BOOLEAN DEFAULT FALSE')
+    conn.exec('ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT')
   end
 
   def create_chatrooms_table(conn)
@@ -310,6 +313,37 @@ class ChatServer
 
     else
       res.body = [].to_json
+    end
+  end
+
+  def handle_avatar(req, res)
+    res['Content-Type'] = 'application/json'
+    case req.request_method
+    when 'GET'
+      user = req.query['user']
+      if user
+        with_conn do |conn|
+          result = conn.exec_params('SELECT avatar FROM users WHERE username=$1', [user])
+          avatar = result.ntuples == 1 ? result[0]['avatar'] : nil
+          res.body = { avatar: avatar }.to_json
+        end
+      else
+        res.status = 400
+        res.body = { error: 'user required' }.to_json
+      end
+    when 'POST'
+      begin
+        data = JSON.parse(req.body)
+        with_conn do |conn|
+          conn.exec_params('UPDATE users SET avatar=$1 WHERE username=$2', [data['avatar'], data['user']])
+        end
+        res.body = { success: true }.to_json
+      rescue JSON::ParserError
+        res.status = 400
+        res.body = { error: 'invalid JSON' }.to_json
+      end
+    else
+      res.status = 405
     end
   end
 
