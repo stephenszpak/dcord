@@ -47,3 +47,16 @@ const register = async (username, password) => {
   });
   return res.ok;
 };
+
+const fetchAvatar = async (user) => {
+  const res = await fetch(`/avatar?user=${encodeURIComponent(user)}`);
+  return res.json();
+};
+
+const updateAvatar = async (user, avatar) => {
+  await fetch('/avatar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user, avatar }),
+  });
+};
